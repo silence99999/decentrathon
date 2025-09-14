@@ -5,8 +5,8 @@ FROM golang:1.23.2-alpine AS go-builder
 
 WORKDIR /app
 
-# Устанавливаем зависимости для компиляции
-RUN apk add --no-cache git
+# Устанавливаем зависимости для компиляции включая gcc для CGO
+RUN apk add --no-cache git gcc musl-dev sqlite-dev
 
 # Копируем go mod файлы и загружаем зависимости
 COPY go.mod go.sum ./
@@ -15,21 +15,20 @@ RUN go mod download
 # Копируем исходный код
 COPY . .
 
-# Компилируем приложение
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o main .
+# Компилируем приложение для glibc (не musl)
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags '-extldflags "-static"' -o main .
 
 # Стадия 2: Подготовка Python окружения
 FROM python:3.11-slim AS python-builder
 
 # Устанавливаем системные зависимости для OpenCV
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
     libgomp1 \
-    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Устанавливаем Python пакеты
@@ -45,7 +44,7 @@ FROM python:3.11-slim
 
 # Устанавливаем системные зависимости для runtime
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -61,7 +60,7 @@ COPY --from=python-builder /usr/local/bin /usr/local/bin
 WORKDIR /app
 
 # Копируем скомпилированное Go приложение
-COPY --from=go-builder /app/main .
+COPY --from=go-builder /app/main /app/main
 
 # Копируем необходимые файлы
 COPY model/ ./model/
@@ -71,7 +70,7 @@ COPY static/ ./static/
 RUN mkdir -p uploads database
 
 # Устанавливаем права на выполнение
-RUN chmod +x main
+RUN chmod +x /app/main
 
 # Открываем порт
 EXPOSE 8081
@@ -80,4 +79,4 @@ EXPOSE 8081
 ENV GIN_MODE=release
 
 # Запускаем приложение
-CMD ["./main"]
+CMD ["/app/main"]
