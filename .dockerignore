@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Runtime
+database.db
+uploads/*
+!uploads/.gitkeep
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Test files
+*_test.go
+test*
+
+# Temporary files
+tmp/
+temp/
+.tmp
+
+# Node modules (if any)
+node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment
+.env
+.env.local

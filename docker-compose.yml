@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  car-damage-detector:
+    build: .
+    container_name: car-damage-detector
+    ports:
+      - "8081:8081"
+    environment:
+      - GIN_MODE=release
+    volumes:
+      - ./uploads:/app/uploads
+      - ./database:/app/database
+      - ./static:/app/static
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - car-damage-network
+
+networks:
+  car-damage-network:
+    driver: bridge
+
+volumes:
+  uploads-data:
+  database-data:

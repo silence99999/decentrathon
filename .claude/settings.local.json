@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(py:*)",
+      "Bash(mkdir:*)",
+      "Bash(go run:*)",
+      "WebSearch",
+      "WebFetch(domain:discuss.roboflow.com)",
+      "WebFetch(domain:docs.roboflow.com)",
+      "Bash(set ROBOFLOW_API_KEY=PGI842w4aKiDDUJFkEnG)",
+      "Bash(start \"http://localhost:8081\")",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(go build:*)",
+      "Bash(del download_models.py roboflow_analyze.py)",
+      "Bash(taskkill:*)",
+      "Bash(findstr:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

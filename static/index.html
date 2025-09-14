@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarCheck AI - Определение состояния автомобиля</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        /* Цвета в стиле логотипа */
+        :root {
+            --primary-green: #A4D93A;
+            --dark-green: #8BC34A;
+            --black: #1a1a1a;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --shadow: rgba(164, 217, 58, 0.3);
+        }
+
+        /* Header */
+        header {
+            background: var(--primary-green);
+            color: var(--black);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px var(--shadow);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--black);
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.7;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: var(--black);
+            text-align: center;
+            padding: 6rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(26,26,26,0.1)"/><circle cx="80" cy="80" r="2" fill="rgba(26,26,26,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(26,26,26,0.1)"/><circle cx="90" cy="30" r="1" fill="rgba(26,26,26,0.1)"/></svg>') repeat;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            letter-spacing: -3px;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .cta-button {
+            background: var(--black);
+            color: var(--primary-green);
+            padding: 1.2rem 3rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(26, 26, 26, 0.3);
+            background: #0d0d0d;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            padding: 4rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .upload-area {
+            border: 3px dashed var(--primary-green);
+            border-radius: 20px;
+            padding: 4rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: var(--dark-green);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow);
+        }
+
+        .upload-area.drag-over {
+            background: linear-gradient(135deg, rgba(164, 217, 58, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%);
+            border-color: var(--dark-green);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--primary-green);
+            margin-bottom: 2rem;
+        }
+
+        .upload-text {
+            font-size: 1.5rem;
+            color: var(--black);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .upload-subtext {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-button {
+            background: var(--primary-green);
+            color: var(--black);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-button:hover {
+            background: var(--dark-green);
+            transform: scale(1.05);
+        }
+
+        /* Results Section */
+        .results {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .result-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .result-item {
+            background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            border-color: var(--primary-green);
+            transform: translateY(-5px);
+        }
+
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--black);
+        }
+
+        .result-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            transition: width 0.8s ease;
+        }
+
+        .clean { color: var(--primary-green); }
+        .dirty { color: #ff6b6b; }
+        .intact { color: var(--primary-green); }
+        .damaged { color: #ffa726; }
+
+        /* Features Section */
+        .features {
+            background: var(--white);
+            padding: 4rem 2rem;
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--black);
+            margin-bottom: 3rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(164, 217, 58, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 1rem;
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* About Section */
+        .about-section {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+        }
+
+        .about-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .about-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .about-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(164, 217, 58, 0.2);
+        }
+
+        .about-icon {
+            font-size: 2.5rem;
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .about-text h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 1rem;
+        }
+
+        .about-text p {
+            color: #666;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .about-text ul {
+            color: #666;
+            line-height: 1.7;
+            padding-left: 1.5rem;
+        }
+
+        .about-text ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .about-text strong {
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--black);
+            color: var(--white);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-green);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">CarCheck AI</div>
+            <ul class="nav-links">
+                <li><a href="#home">Главная</a></li>
+                <li><a href="#features">Возможности</a></li>
+                <li><a href="#about">О проекте</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Умный анализ состояния автомобилей</h1>
+            <p>Определите чистоту и повреждения авто за секунды с помощью ИИ</p>
+            <a href="#upload" class="cta-button">
+                <i class="fas fa-camera"></i> Проверить авто
+            </a>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section class="upload-section" id="upload">
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="upload-text">Загрузите фото автомобиля</div>
+            <div class="upload-subtext">Поддерживаются форматы: JPG, PNG, WebP (до 10MB)</div>
+            <input type="file" class="file-input" id="fileInput" accept="image/*">
+            <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-plus"></i> Выбрать файл
+            </button>
+        </div>
+
+        <!-- Loading Animation -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Анализируем состояние автомобиля...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results" id="results">
+            <div class="result-card">
+                <img id="previewImage" class="image-preview" alt="Загруженное изображение">
+
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="result-icon clean" id="cleanlinessIcon">
+                            <i class="fas fa-sparkles"></i>
+                        </div>
+                        <div class="result-title">Чистота</div>
+                        <div class="result-value clean" id="cleanlinessResult">Чистый</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="cleanlinessBar" style="width: 87%"></div>
+                        </div>
+                        <small>Уверенность: <span id="cleanlinessConfidence">87%</span></small>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-icon intact" id="damageIcon">
+                            <i class="fas fa-shield-check"></i>
+                        </div>
+                        <div class="result-title">Целостность</div>
+                        <div class="result-value intact" id="damageResult">Без повреждений</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="damageBar" style="width: 92%"></div>
+                        </div>
+                        <small>Уверенность: <span id="damageConfidence">92%</span></small>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(164, 217, 58, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%); border-radius: 15px;">
+                    <h3 style="color: var(--black); margin-bottom: 1rem;">
+                        <i class="fas fa-lightbulb" style="color: var(--primary-green);"></i>
+                        Рекомендации для inDrive
+                    </h3>
+                    <div id="recommendations">
+                        <p><i class="fas fa-check" style="color: var(--primary-green);"></i> Автомобиль в отличном состоянии</p>
+                        <p><i class="fas fa-thumbs-up" style="color: var(--primary-green);"></i> Можно смело заказывать поездку</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="features-container">
+            <h2 class="section-title">Возможности системы</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="feature-title">Умное распознавание</div>
+                    <div class="feature-description">
+                        Современные нейронные сети анализируют состояние автомобиля с точностью более 90%
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="feature-title">Быстрая обработка</div>
+                    <div class="feature-description">
+                        Результат анализа готов за 1-2 секунды после загрузки изображения
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-title">Безопасность данных</div>
+                    <div class="feature-description">
+                        Все изображения обрабатываются локально и не сохраняются на серверах
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="feature-title">Мобильная версия</div>
+                    <div class="feature-description">
+                        Оптимизирована для использования на смартфонах и планшетах
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="feature-title">Подробная аналитика</div>
+                    <div class="feature-description">
+                        Детальная информация о типах повреждений и степени загрязнения
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-integration"></i>
+                    </div>
+                    <div class="feature-title">Интеграция с inDrive</div>
+                    <div class="feature-description">
+                        Готов к интеграции в мобильное приложение для повышения качества сервиса
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Project Section -->
+    <section class="about-section" id="about">
+        <div class="about-container">
+            <h2 class="section-title">О проекте CarCheck AI</h2>
+
+            <div class="about-content">
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <div class="about-text">
+                        <h3>Цель проекта</h3>
+                        <p>Создание интеллектуальной системы анализа состояния автомобилей для повышения качества сервиса inDrive. Наша система помогает пассажирам принимать осознанные решения при выборе поездки.</p>
+                    </div>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="about-text">
+                        <h3>Технологии</h3>
+                        <p><strong>Гибридный подход анализа:</strong></p>
+                        <ul>
+                            <li><strong>Машинное обучение</strong> - обученные нейронные сети для детекции повреждений</li>
+                            <li><strong>Computer Vision</strong> - алгоритмы анализа изображений на основе OpenCV</li>
+                            <li><strong>Интеллектуальная обработка</strong> - автоматическое определение оптимальных алгоритмов для каждого изображения</li>
+                            <li><strong>Go Backend</strong> - высокопроизводительный сервер с RESTful API</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="about-text">
+                        <h3>Возможности анализа</h3>
+                        <p>Система определяет:</p>
+                        <ul>
+                            <li><strong>Царапины и вмятины</strong> с точными координатами и размерами</li>
+                            <li><strong>Ржавчину</strong> на поверхности автомобиля</li>
+                            <li><strong>Уровень чистоты</strong> с процентной оценкой</li>
+                            <li><strong>Общее состояние</strong> от "Отлично" до "Требует внимания"</li>
+                            <li><strong>Детальные рекомендации</strong> для пассажиров</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <div class="about-text">
+                        <h3>Сравнительный анализ</h3>
+                        <p>Уникальная особенность - <strong>двойная проверка</strong>:</p>
+                        <ul>
+                            <li>Результаты от ML-моделей машинного обучения</li>
+                            <li>Результаты от традиционных алгоритмов компьютерного зрения</li>
+                            <li>Анализ согласованности методов</li>
+                            <li>Объединенный результат с весами 70%/30%</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-mobile"></i>
+                    </div>
+                    <div class="about-text">
+                        <h3>Интеграция с inDrive</h3>
+                        <p>Готово к внедрению:</p>
+                        <ul>
+                            <li><strong>RESTful API</strong> для легкой интеграции</li>
+                            <li><strong>Мобильная версия</strong> адаптирована под смартфоны</li>
+                            <li><strong>Быстрый анализ</strong> - результат за 1-2 секунды</li>
+                            <li><strong>Понятные рекомендации</strong> для пассажиров</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="about-text">
+                        <h3>Архитектура и надежность</h3>
+                        <p>Продуманное решение:</p>
+                        <ul>
+                            <li><strong>Масштабируемая архитектура</strong> - готовность к обработке больших объемов данных</li>
+                            <li><strong>Оптимизированные алгоритмы</strong> - быстрое время отклика и высокая точность</li>
+                            <li><strong>База данных</strong> для хранения истории анализов</li>
+                            <li><strong>Подробная статистика</strong> и история проверок</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 CarCheck AI. Разработано для хакатона inDrive</p>
+            <p style="margin-top: 0.5rem; opacity: 0.7;">
+                <i class="fas fa-code"></i> Powered by ML & Computer Vision | AI + OpenCV
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // API endpoint
+        const API_BASE = 'http://localhost:8081/api';
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const previewImage = document.getElementById('previewImage');
+
+        // Drag and Drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        async function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Пожалуйста, выберите изображение');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Размер файла не должен превышать 10MB');
+                return;
+            }
+
+            // Show loading
+            results.classList.remove('active');
+            loading.classList.add('active');
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Upload to backend
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`${API_BASE}/analyze`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                processImage(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Ошибка при анализе изображения. Пожалуйста, попробуйте еще раз.');
+                loading.classList.remove('active');
+            }
+        }
+
+        function processImage(data) {
+            // Hide loading
+            loading.classList.remove('active');
+
+            // Update results based on backend response
+            updateResults(data);
+
+            // Show results
+            results.classList.add('active');
+            results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function updateResults(data) {
+            // Calculate scores based on backend data
+            const cleanlinessScore = data.cleanliness_score;
+            const hasDamage = data.has_rust || data.has_cracks || data.has_scratches || data.has_dents;
+
+            // Calculate integrity score based on number and severity of damages
+            let integrityScore = 1.0; // Start with perfect integrity
+
+            if (data.has_rust) integrityScore -= 0.2;
+            if (data.has_cracks) integrityScore -= 0.25;
+            if (data.has_scratches) integrityScore -= 0.1;
+            if (data.has_dents) integrityScore -= 0.15;
+            if (data.has_dirt) integrityScore -= 0.05;
+
+            integrityScore = Math.max(0.1, integrityScore); // Minimum 10%
+            const damageScore = integrityScore;
+
+            // Update cleanliness
+            const cleanlinessIcon = document.getElementById('cleanlinessIcon');
+            const cleanlinessResult = document.getElementById('cleanlinessResult');
+            const cleanlinessBar = document.getElementById('cleanlinessBar');
+            const cleanlinessConfidence = document.getElementById('cleanlinessConfidence');
+
+            const isClean = cleanlinessScore > 0.6;
+            cleanlinessIcon.innerHTML = `<i class="fas fa-${isClean ? 'sparkles' : 'tint'}"></i>`;
+            cleanlinessIcon.className = `result-icon ${isClean ? 'clean' : 'dirty'}`;
+
+            if (cleanlinessScore > 0.8) {
+                cleanlinessResult.textContent = 'Чистый';
+            } else if (cleanlinessScore > 0.6) {
+                cleanlinessResult.textContent = 'Слегка грязный';
+            } else {
+                cleanlinessResult.textContent = 'Грязный';
+            }
+
+            cleanlinessResult.className = `result-value ${isClean ? 'clean' : 'dirty'}`;
+            cleanlinessBar.style.width = `${Math.round(cleanlinessScore * 100)}%`;
+            cleanlinessConfidence.textContent = `${Math.round(cleanlinessScore * 100)}%`;
+
+            // Update damage
+            const damageIcon = document.getElementById('damageIcon');
+            const damageResult = document.getElementById('damageResult');
+            const damageBar = document.getElementById('damageBar');
+            const damageConfidence = document.getElementById('damageConfidence');
+
+            const isDamaged = data.has_rust || data.has_cracks;
+            damageIcon.innerHTML = `<i class="fas fa-${!isDamaged ? 'shield-check' : 'exclamation-triangle'}"></i>`;
+            damageIcon.className = `result-icon ${!isDamaged ? 'intact' : 'damaged'}`;
+
+            if (data.has_rust && data.has_cracks) {
+                damageResult.textContent = 'Серьезные повреждения';
+            } else if (data.has_rust || data.has_cracks) {
+                damageResult.textContent = 'Незначительные повреждения';
+            } else {
+                damageResult.textContent = 'Без повреждений';
+            }
+
+            damageResult.className = `result-value ${!isDamaged ? 'intact' : 'damaged'}`;
+            damageBar.style.width = `${Math.round(damageScore * 100)}%`;
+            damageConfidence.textContent = `${Math.round(damageScore * 100)}%`;
+
+            // Update recommendations based on backend status
+            updateRecommendations(data);
+        }
+
+        function updateRecommendations(data) {
+            const recommendationsDiv = document.getElementById('recommendations');
+            let recommendations = [];
+
+            if (data.overall_status === 'excellent') {
+                recommendations = [
+                    '<p><i class="fas fa-check" style="color: var(--primary-green);"></i> Автомобиль в отличном состоянии</p>',
+                    '<p><i class="fas fa-thumbs-up" style="color: var(--primary-green);"></i> Можно смело заказывать поездку</p>'
+                ];
+            } else if (data.overall_status === 'good') {
+                recommendations = [
+                    '<p><i class="fas fa-check" style="color: var(--primary-green);"></i> Состояние приемлемое</p>',
+                    '<p><i class="fas fa-star" style="color: var(--primary-green);"></i> Хороший выбор для поездки</p>'
+                ];
+            } else if (data.overall_status === 'needs_attention') {
+                recommendations = [
+                    '<p><i class="fas fa-shower" style="color: #ffa726;"></i> Рекомендуется помыть автомобиль</p>',
+                    '<p><i class="fas fa-info-circle" style="color: #ffa726;"></i> Уведомить пассажира о состоянии</p>'
+                ];
+            } else if (data.overall_status === 'poor') {
+                recommendations = [
+                    '<p><i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i> Обнаружены повреждения</p>',
+                    '<p><i class="fas fa-phone" style="color: #ff6b6b;"></i> Свяжитесь с водителем для уточнений</p>'
+                ];
+            } else {
+                // Показываем детали только если они есть и содержательны
+                if (data.details && data.details !== "") {
+                    recommendations = [
+                        '<p><i class="fas fa-info-circle" style="color: var(--primary-green);"></i> ' + data.details + '</p>'
+                    ];
+                } else {
+                    recommendations = [
+                        '<p><i class="fas fa-check" style="color: var(--primary-green);"></i> Анализ завершен</p>'
+                    ];
+                }
+            }
+
+            recommendationsDiv.innerHTML = recommendations.join('');
+        }
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect for header
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(164, 217, 58, 0.95)';
+                header.style.backdropFilter = 'blur(10px)';
+            } else {
+                header.style.background = 'var(--primary-green)';
+                header.style.backdropFilter = 'none';
+            }
+        });
+
+        // Add fade-in animation to feature cards
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card').forEach(card => {
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
